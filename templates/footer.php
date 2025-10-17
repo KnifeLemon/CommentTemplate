@@ -1,1 +1,0 @@
-<footer>© 2025 Test Footer</footer>
