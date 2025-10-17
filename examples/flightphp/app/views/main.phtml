@@ -1,0 +1,71 @@
+<!--@layout(layouts/default)-->
+<!--@assetDir(resources)-->
+<!--@css(resources/fonts/fonts.css)-->
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="hero-section mb-4">
+            <h1 class="display-4">{$title|escape}</h1>
+            <p class="lead">Welcome to FlightPHP integrated with CommentTemplate!</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Hello, {$name|escape|default=Guest}!</h3>
+            </div>
+            <div class="card-body">
+                <p>This is a demonstration of FlightPHP working with CommentTemplate engine.</p>
+                
+                <h4>Features demonstrated:</h4>
+                <ul class="list-group list-group-flush ms-5">
+                    <li class="list-group-item">✅ Template inheritance with layouts</li>
+                    <li class="list-group-item">✅ Variable processing and filters</li>
+                    <li class="list-group-item">✅ Asset compilation and minification</li>
+                    <li class="list-group-item">✅ FlightPHP framework integration</li>
+                    <li class="list-group-item">✅ Asset directory copying with @assetDir</li>
+                    <li class="list-group-item">✅ Custom font loading</li>
+                </ul>
+                
+                <div class="mt-3 p-3 bg-light rounded">
+                    <h5>Asset Demo:</h5>
+                    <div class="d-flex align-items-center">
+                        <img src="<!--@asset(resources/icons/star.svg)-->" alt="Star" style="width: 24px; height: 24px; margin-right: 10px;">
+                        <span style="font-family: 'CustomFont', Arial, sans-serif;">Custom Font with Icons</span>
+                        <img src="<!--@asset(resources/icons/heart.svg)-->" alt="Heart" style="width: 24px; height: 24px; margin-left: 10px;">
+                        <span class="icon-star"></span>
+                        <span class="icon-heart"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Framework Info</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Framework:</strong> FlightPHP</p>
+                <p><strong>Template Engine:</strong> CommentTemplate</p>
+                <p><strong>User:</strong> {$name|escape|default=Anonymous}</p>
+                <p><strong>Status:</strong> <span class="badge bg-success">Running</span></p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Quick Links</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><a href="/" class="text-decoration-none">🏠 Home</a></li>
+                    <li><a href="/asset-test" class="text-decoration-none">📁 Asset Path Test</a></li>
+                    <li><a href="/redirect" class="text-decoration-none">🔄 Test Redirect</a></li>
+                    <li><a href="https://flightphp.com" class="text-decoration-none" target="_blank">🚀 FlightPHP Docs</a></li>
+                    <li><a href="#" class="text-decoration-none">📚 CommentTemplate Docs</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

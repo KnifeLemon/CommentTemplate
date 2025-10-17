@@ -1,0 +1,45 @@
+{
+    "name": "knifelemon/comment-template",
+    "description": "A PHP template engine with asset compilation, template inheritance, and variable processing",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "php",
+        "template",
+        "template-engine",
+        "asset-compilation",
+        "minification",
+        "template-inheritance"
+    ],
+    "authors": [
+        {
+            "name": "KnifeLemon",
+            "email": "knifelemon@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "matthiasmullie/minify": "^1.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5",
+        "phpstan/phpstan": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "KnifeLemon\\CommentTemplate\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "KnifeLemon\\CommentTemplate\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html coverage",
+        "phpstan": "phpstan analyse src --level=max"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -1,0 +1,21 @@
+<svg width="120" height="40" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="120" height="40" rx="8" fill="url(#logoGradient)"/>
+  
+  <!-- Airplane icon -->
+  <g transform="translate(10, 12)">
+    <path d="M2 16 L8 10 L14 12 L20 8 L22 10 L16 14 L14 16 L8 14 Z" fill="white" opacity="0.9"/>
+    <circle cx="6" cy="12" r="1" fill="white"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="35" y="25" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">Flight</text>
+  <text x="75" y="25" font-family="Arial, sans-serif" font-size="12" fill="white" opacity="0.8">PHP</text>
+</svg>

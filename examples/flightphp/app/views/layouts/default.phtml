@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{$title|default=FlightPHP + CommentTemplate}</title>
+    <!--@css(css/bootstrap.min.css)-->
+    <!--@css(css/custom.css)-->
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="<!--@asset(image/logo.svg)-->" alt="FlightPHP Logo" style="height: 30px; margin-right: 10px;">
+                FlightPHP + CommentTemplate
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text text-white">
+                    Welcome to FlightPHP!
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        <!--@contents-->
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container">
+            <div class="text-center">
+                <p>Made With <span class="icon-heart"></span> Claude Sonnet 4</p>
+            </div>
+        </div>
+    </footer>
+
+    <!--@jsDefer(js/bootstrap.min.js)-->
+    <!--@js(js/app.js)-->
+</body>
+</html>

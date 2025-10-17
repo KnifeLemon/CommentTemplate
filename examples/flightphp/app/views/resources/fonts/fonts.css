@@ -1,0 +1,7 @@
+/* Custom Font Styles */
+@font-face {
+    font-family: 'CustomFont';
+    src: url('<!--@asset(resources/fonts/custom-font.woff2)-->') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
