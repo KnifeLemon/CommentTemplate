@@ -1,3 +1,9 @@
+[![Latest Stable Version](https://poser.pugx.org/knifelemon/comment-template/v/stable)](https://packagist.org/packages/knifelemon/comment-template)
+[![Total Downloads](https://poser.pugx.org/knifelemon/comment-template/downloads)](https://packagist.org/packages/knifelemon/comment-template)
+[![Latest Unstable Version](https://poser.pugx.org/knifelemon/comment-template/v/unstable)](https://packagist.org/packages/knifelemon/comment-template)
+[![License](https://poser.pugx.org/knifelemon/comment-template/license)](https://packagist.org/packages/knifelemon/comment-template)
+[![PHP Version Require](https://poser.pugx.org/knifelemon/comment-template/require/php)](https://packagist.org/packages/knifelemon/comment-template)
+
 # CommentTemplate
 
 A powerful PHP template engine with asset compilation, template inheritance, and variable processing. CommentTemplate provides a simple yet flexible way to manage templates with built-in CSS/JS minification and caching.
