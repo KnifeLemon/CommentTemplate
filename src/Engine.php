@@ -244,6 +244,11 @@ class Engine
         
         $this->encodeBase64($html);
         $this->processAssets($html);
+        
+        // Clean up empty lines left by directive removal
+        $html = preg_replace('/^\s*\n/m', '', $html);
+        $html = preg_replace('/\n\s*\n/', "\n", $html);
+        $html = trim($html);
 
         return $html;
     }
