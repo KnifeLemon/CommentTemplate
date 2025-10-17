@@ -40,6 +40,6 @@
         "test-coverage": "phpunit --coverage-html coverage",
         "phpstan": "phpstan analyse src --level=max"
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }
