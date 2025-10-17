@@ -404,5 +404,4 @@ MIT License. See LICENSE file for details.
 
 ## Support
 
-- [GitHub Issues](https://github.com/your-username/comment-template/issues)
-- [Documentation](https://github.com/your-username/comment-template/wiki)
+- [GitHub Issues](https://github.com/KnifeLemon/CommentTemplate/issues)
