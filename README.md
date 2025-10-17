@@ -241,9 +241,24 @@ public/
 ```
 
 ### Comments
+
+Template comments are completely removed from the output and won't appear in the final HTML:
+
 ```html
-{* This is a template comment *}     <!-- Removed from output -->
+{* This is a single-line template comment *}
+
+{* 
+   This is a multi-line 
+   template comment 
+   that spans several lines
+*}
+
+<h1>{$title}</h1>
+{* Debug comment: checking if title variable works *}
+<p>{$content}</p>
 ```
+
+**Note**: Template comments `{* ... *}` are different from HTML comments `<!-- ... -->`. Template comments are removed during processing and never reach the browser.
 
 ## API Reference
 
