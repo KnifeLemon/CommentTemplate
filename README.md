@@ -26,6 +26,8 @@ composer require knifelemon/comment-template
 
 ## Quick Start
 
+### Basic Usage
+
 ```php
 <?php
 require_once 'vendor/autoload.php';
@@ -33,14 +35,60 @@ require_once 'vendor/autoload.php';
 use KnifeLemon\CommentTemplate\Engine;
 
 // Initialize template engine
-$template = new Engine('/path/to/templates', '.php');
-$template->setPublicPath('/path/to/public');
+$template = new Engine(__DIR__ . '/templates', '.php');
+$template->setPublicPath(__DIR__ . '/public');
 
 // Render template
 $template->render('homepage', [
     'title' => 'Welcome',
     'content' => 'Hello World!'
 ]);
+```
+
+### Flight Framework Integration
+
+#### Method 1: Using Callback (Recommended)
+
+```php
+<?php
+require_once 'vendor/autoload.php';
+
+use KnifeLemon\CommentTemplate\Engine;
+
+$app = Flight::app();
+
+$app->register('view', Engine::class, [], function (Engine $engine) {
+    $engine->setTemplatesPath(__DIR__ . '/views');
+    $engine->setPublicPath(__DIR__ . '/public');
+    $engine->setAssetPath('assets');
+    $engine->setFileExtension('.php');
+});
+
+$app->map('render', function(string $template, array $data) use ($app): void {
+    echo $app->view()->render($template, $data);
+});
+```
+
+#### Method 2: Using Constructor Parameters
+
+```php
+<?php
+require_once 'vendor/autoload.php';
+
+use KnifeLemon\CommentTemplate\Engine;
+
+$app = Flight::app();
+
+$app->register('view', Engine::class, [
+    __DIR__ . '/public',    // Public path
+    __DIR__ . '/views',     // Templates path  
+    'assets',               // Asset path
+    '.php'                  // File extension
+]);
+
+$app->map('render', function(string $template, array $data) use ($app): void {
+    echo $app->view()->render($template, $data);
+});
 ```
 
 ## Template Directives
@@ -103,6 +151,13 @@ Use layouts to create a common structure:
 #### Base64 Encoding
 ```html
 <!--@base64(images/logo.png)-->       <!-- Inline as data URI -->
+```
+```html
+<!-- Inline small images as data URIs for faster loading -->
+<img src="<!--@base64(images/logo.png)-->" alt="Logo">
+<div style="background-image: url('<!--@base64(icons/star.svg)-->');">
+    Small icon as background
+</div>
 ```
 
 #### Asset Copying
@@ -182,6 +237,15 @@ Flight::set('flight.views.assetPath', Flight::get('flight.views.topPath') . '/as
 <!--@assetDir(images)-->
 <!--@assetDir(fonts)-->
 ```
+```html
+<!-- Copy and reference static assets -->
+<img src="<!--@asset(images/hero-banner.jpg)-->" alt="Hero Banner">
+<a href="<!--@asset(documents/brochure.pdf)-->" download>Download Brochure</a>
+
+<!-- Copy entire directory (fonts, icons, etc.) -->
+<!--@assetDir(assets/fonts)-->
+<!--@assetDir(assets/icons)-->
+```
 
 **Directory structure example:**
 ```
@@ -210,15 +274,23 @@ public/
 ```html
 <!--@import(components/header)-->     <!-- Include other templates -->
 ```
-
-### Variable Processing
-
-#### Basic Variables
 ```html
-<h1>{$title}</h1>
-<p>{$description}</p>
+<!-- Include reusable components -->
+<!--@import(components/header)-->
+
+<main>
+    <h1>Welcome to our website</h1>
+    <!--@import(components/sidebar)-->
+    
+    <div class="content">
+        <p>Main content here...</p>
+    </div>
+</main>
+
+<!--@import(components/footer)-->
 ```
 
+### Variable Processing
 #### Variable Filters
 ```html
 {$title|upper}                       <!-- Convert to uppercase -->
@@ -226,7 +298,9 @@ public/
 {$html|striptag}                     <!-- Strip HTML tags -->
 {$text|escape}                       <!-- Escape HTML -->
 {$multiline|nl2br}                   <!-- Convert newlines to <br> -->
+{$html|br2nl}                        <!-- Convert <br> tags to newlines -->
 {$description|trim}                  <!-- Trim whitespace -->
+{$subject|title}                     <!-- Convert to title case -->
 ```
 
 #### Variable Commands
@@ -238,6 +312,12 @@ public/
 #### Chain Multiple Filters
 ```html
 {$content|striptag|trim|escape}      <!-- Chain multiple filters -->
+```
+
+**Example:**
+```html
+<h1>{$title|upper}</h1>
+<p>{$description|striptag}</p>
 ```
 
 ### Comments
@@ -301,74 +381,11 @@ public function __construct(string $publicPath = "", string $skinPath = "", stri
 **getAssetPath(): string**
 - Get current asset storage path
 
-## Examples
-
-### Basic Usage
-
-```php
-$template = new Engine('./templates', '.html');
-$template->setPublicPath('./public');
-
-$template->render('welcome', [
-    'title' => 'Welcome to My Site',
-    'user' => 'John Doe',
-    'isLoggedIn' => true
-]);
-```
-
-### With Flight Framework
-
-```php
-// Flight will automatically configure paths
-$template = new Engine();
-
-Flight::route('/', function() use ($template) {
-    $template->render('homepage', [
-        'title' => 'Home Page'
-    ]);
-});
-```
-
-### Asset Compilation Example
-
-**template.php**:
-```html
-<!--@layout(layout)-->
-<!--@css(/css/bootstrap.css)-->
-<!--@css(/css/custom.css)-->
-<!--@js(/js/jquery.js)-->
-<!--@js(/js/app.js)-->
-
-<div class="container">
-    <h1>{$title|escape}</h1>
-    <p>{$content|nl2br}</p>
-</div>
-```
-
 This will:
 1. Minify and combine CSS files
 2. Minify and combine JS files
 3. Cache compiled assets
 4. Inject `<link>` and `<script>` tags automatically
-
-## File Structure
-
-```
-your-project/
-├── templates/
-│   ├── layout.php
-│   ├── homepage.php
-│   └── components/
-│       └── header.php
-├── public/
-│   ├── css/
-│   ├── js/
-│   └── assets/          <!-- Generated cache directory -->
-│       ├── css/
-│       └── js/
-└── vendor/
-    └── commenttemplate/
-```
 
 ## Development
 
