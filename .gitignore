@@ -2,6 +2,9 @@
 /vendor/
 composer.lock
 
+# Example vendor directories
+examples/*/vendor/
+
 # IDE and Editor files
 .vscode/
 .idea/
