@@ -25,14 +25,6 @@ class IndexController {
     {
         $this->app->redirect($this->app->getUrl('index'));
     }
-    
-    public function assetTest()
-    {
-        $this->app->render('asset_test', [
-            ...$this->getDefaultData(),
-            'title' => 'Asset Path Test',
-        ]);
-    }
 
     protected function getDefaultData(): array
     {

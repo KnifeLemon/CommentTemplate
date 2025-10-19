@@ -11,5 +11,4 @@ $router->group('/', function () use ($router, $app) {
 	$router->get('(index)', [ $index_controller, 'index' ], false, 'index_has');
 
 	$router->get('redirect', [ $index_controller, 'redirect' ], false, 'redirect');
-	$router->get('asset-test', [ $index_controller, 'assetTest' ], false, 'asset_test');
 });
