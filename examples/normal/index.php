@@ -1,11 +1,14 @@
 <?php
 require_once '../../vendor/autoload.php';
 
-use CommentTemplate\CommentTemplate;
+use KnifeLemon\CommentTemplate\Engine;
 
 // Initialize template engine
-$template = new CommentTemplate(__DIR__ . '/templates', '.php');
-$template->setPublicPath(__DIR__ . '/public');
+$template = new Engine();
+$template->setPublicPath(__DIR__);
+$template->setAssetPath(__DIR__ . '/assets');
+$template->setSkinPath(__DIR__ . '/templates');
+$template->setFileExtension('.php');
 
 // Sample data
 $data = [

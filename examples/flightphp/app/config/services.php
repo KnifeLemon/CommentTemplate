@@ -1,9 +1,9 @@
 <?php
 
-use CommentTemplate\CommentTemplate;
+use KnifeLemon\CommentTemplate\Engine;
 
 // Template Overried
-$app->register('view', CommentTemplate::class, [], function (CommentTemplate $builder) use ($app) {
+$app->register('view', Engine::class, [], function (Engine $builder) use ($app) {
     $builder->setPublicPath($app->get('flight.views.topPath'));
     $builder->setAssetPath($app->get('flight.views.assetPath'));
     $builder->setSkinPath($app->get('flight.views.path'));

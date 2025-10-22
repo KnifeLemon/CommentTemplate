@@ -167,6 +167,46 @@ class CommentTemplateTest extends TestCase
         $this->assertEquals('/custom/path/', $this->templateEngine->getAssetPath());
     }
 
+    public function testSkinPathConfiguration()
+    {
+        // Test initial templates path (should be resolved to absolute path)
+        $this->assertStringContainsString('templates', $this->templateEngine->getSkinPath());
+
+        // Test setting relative templates path
+        $this->templateEngine->setSkinPath('views');
+        $expectedPath = $this->tempDir . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'views';
+        $this->assertEquals($expectedPath, $this->templateEngine->getSkinPath());
+
+        // Test setting relative templates path with subdirectory
+        $this->templateEngine->setSkinPath('templates/pages');
+        $expectedPath = $this->tempDir . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'pages';
+        $this->assertEquals($expectedPath, $this->templateEngine->getSkinPath());
+
+        // Test setting absolute templates path
+        $absolutePath = $this->tempDir . DIRECTORY_SEPARATOR . 'custom' . DIRECTORY_SEPARATOR . 'templates';
+        $this->templateEngine->setSkinPath($absolutePath);
+        $this->assertEquals($absolutePath, $this->templateEngine->getSkinPath());
+    }
+
+    public function testAbsolutePathDetection()
+    {
+        // Test Unix absolute path
+        if (DIRECTORY_SEPARATOR === '/') {
+            $this->templateEngine->setSkinPath('/var/www/templates');
+            $this->assertEquals('/var/www/templates', $this->templateEngine->getSkinPath());
+        }
+        
+        // Test Windows absolute path (works on all systems for testing)
+        $windowsPath = 'C:\\www\\templates';
+        $this->templateEngine->setSkinPath($windowsPath);
+        $this->assertEquals($windowsPath, $this->templateEngine->getSkinPath());
+        
+        // Test relative path resolution
+        $this->templateEngine->setSkinPath('relative/path');
+        $expected = $this->tempDir . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'relative' . DIRECTORY_SEPARATOR . 'path';
+        $this->assertEquals($expected, $this->templateEngine->getSkinPath());
+    }
+
     public function testAssetDirectiveCopying()
     {
         // Create a test image file in templates directory

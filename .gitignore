@@ -1,9 +1,6 @@
 # Composer
-/vendor/
+vendor/
 composer.lock
-
-# Example vendor directories
-examples/*/vendor/
 
 # IDE and Editor files
 .vscode/
@@ -83,3 +80,6 @@ phpunit.xml.dist
 # Local configuration
 config.local.php
 local.php
+
+# Assets directory
+assets/

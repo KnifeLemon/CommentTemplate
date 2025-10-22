@@ -35,8 +35,11 @@ require_once 'vendor/autoload.php';
 use KnifeLemon\CommentTemplate\Engine;
 
 // Initialize template engine
-$template = new Engine(__DIR__ . '/templates', '.php');
-$template->setPublicPath(__DIR__ . '/public');
+$template = new Engine();
+$template->setPublicPath(__DIR__);        // Root directory (where index.php is)
+$template->setSkinPath('templates');      // Relative to public path
+$template->setAssetPath('assets');        // Relative to public path
+$template->setFileExtension('.php');
 
 // Render template
 $template->render('homepage', [
@@ -58,9 +61,9 @@ use KnifeLemon\CommentTemplate\Engine;
 $app = Flight::app();
 
 $app->register('view', Engine::class, [], function (Engine $engine) {
-    $engine->setTemplatesPath(__DIR__ . '/views');
-    $engine->setPublicPath(__DIR__ . '/public');
-    $engine->setAssetPath('assets');
+    $engine->setPublicPath(__DIR__);           // Root directory (where index.php is)
+    $engine->setSkinPath('views');             // Relative to public path
+    $engine->setAssetPath('assets');           // Relative to public path
     $engine->setFileExtension('.php');
 });
 
@@ -80,9 +83,9 @@ use KnifeLemon\CommentTemplate\Engine;
 $app = Flight::app();
 
 $app->register('view', Engine::class, [
-    __DIR__ . '/public',    // Public path
-    __DIR__ . '/views',     // Templates path  
-    'assets',               // Asset path
+    __DIR__,                // Public path (root directory where index.php is)
+    'views',                // Templates path (relative to public path) 
+    'assets',               // Asset path (relative to public path)
     '.php'                  // File extension
 ]);
 
@@ -200,32 +203,79 @@ const imageData = '<!--@base64(images/icon.png)-->';
 - URLs are generated with correct asset paths
 - Base64 encoding works in CSS/JS files too
 
-### Asset Path Configuration
+### Path Configuration
 
-You can configure where assets are stored using either relative or absolute paths:
+CommentTemplate provides intelligent path handling for both relative and absolute paths:
+
+#### Public Path
+The **Public Path** is the root directory of your web application, typically where `index.php` resides. This is the document root that web servers serve files from.
 
 ```php
-$template = new CommentTemplate('/path/to/templates', '.php');
-$template->setPublicPath('/path/to/public');
+// Example: if your index.php is at /var/www/html/myapp/index.php
+$template->setPublicPath('/var/www/html/myapp');  // Root directory
 
-// Relative to public path (default behavior)
-$template->setAssetPath('assets');        // → /path/to/public/assets/
-$template->setAssetPath('static/files');  // → /path/to/public/static/files/
+// Windows example: if your index.php is at C:\xampp\htdocs\myapp\index.php
+$template->setPublicPath('C:\\xampp\\htdocs\\myapp');
+```
 
-// Absolute paths
+#### Templates Path Configuration
+
+Templates path supports both relative and absolute paths:
+
+```php
+$template = new Engine();
+$template->setPublicPath('/var/www/html/myapp');  // Root directory (where index.php is)
+
+// Relative paths - automatically combined with public path
+$template->setSkinPath('views');           // → /var/www/html/myapp/views/
+$template->setSkinPath('templates/pages'); // → /var/www/html/myapp/templates/pages/
+
+// Absolute paths - used as-is (Unix/Linux)
+$template->setSkinPath('/var/www/templates');      // → /var/www/templates/
+$template->setSkinPath('/full/path/to/templates'); // → /full/path/to/templates/
+
+// Windows absolute paths
+$template->setSkinPath('C:\\www\\templates');     // → C:\www\templates\
+$template->setSkinPath('D:/projects/templates');  // → D:/projects/templates/
+
+// UNC paths (Windows network shares)
+$template->setSkinPath('\\\\server\\share\\templates'); // → \\server\share\templates\
+```
+
+#### Asset Path Configuration
+
+Asset path also supports both relative and absolute paths:
+
+```php
+// Relative paths - automatically combined with public path
+$template->setAssetPath('assets');        // → /var/www/html/myapp/assets/
+$template->setAssetPath('static/files');  // → /var/www/html/myapp/static/files/
+
+// Absolute paths - used as-is (Unix/Linux)
 $template->setAssetPath('/var/www/cdn');           // → /var/www/cdn/
 $template->setAssetPath('/full/path/to/assets');   // → /full/path/to/assets/
 
-// FlightPHP integration with absolute path
-Flight::set('flight.views.assetPath', Flight::get('flight.views.topPath') . '/assets');
+// Windows absolute paths
+$template->setAssetPath('C:\\www\\static');       // → C:\www\static\
+$template->setAssetPath('D:/projects/assets');    // → D:/projects/assets/
+
+// UNC paths (Windows network shares)
+$template->setAssetPath('\\\\server\\share\\assets'); // → \\server\share\assets\
 ```
 
+**Smart Path Detection:**
+- **Relative Paths**: No leading separators (`/`, `\`) or drive letters
+- **Unix Absolute**: Starts with `/` (e.g., `/var/www/assets`)
+- **Windows Absolute**: Starts with drive letter (e.g., `C:\www`, `D:/assets`)
+- **UNC Paths**: Starts with `\\` (e.g., `\\server\share`)
+
 **How it works:**
-- `@css` and `@js` directives create minified files in: `{publicPath}/{assetPath}/css/` or `{publicPath}/{assetPath}/js/`
-- `@asset` directive copies single files to: `{publicPath}/{assetPath}/{relativePath}`
-- `@assetDir` directive copies entire directories to: `{publicPath}/{assetPath}/{relativePath}`
-- Files are only copied when source is newer than destination
-- URLs are generated with the configured asset path
+- All paths are automatically resolved based on type (relative vs absolute)
+- Relative paths are combined with the public path
+- `@css` and `@js` create minified files in: `{resolvedAssetPath}/css/` or `{resolvedAssetPath}/js/`
+- `@asset` copies single files to: `{resolvedAssetPath}/{relativePath}`
+- `@assetDir` copies directories to: `{resolvedAssetPath}/{relativePath}`
+- Smart caching: files only copied when source is newer than destination
 
 #### Asset Directory Copying Examples
 
@@ -250,7 +300,7 @@ Flight::set('flight.views.assetPath', Flight::get('flight.views.topPath') . '/as
 **Directory structure example:**
 ```
 templates/
-├── assets/
+├── resources/
 │   ├── images/
 │   │   ├── logo.png
 │   │   └── banner.jpg
@@ -260,11 +310,11 @@ templates/
 │       └── app.js
 └── layout.php
 
-After <!--@assetDir(assets)--> in template:
+After <!--@assetDir(resources)--> in template:
 
 public/
 └── assets/           # (configured asset path)
-    └── assets/       # (copied directory)
+    └── resources/       # (copied directory)
         ├── images/
         ├── css/
         └── js/
@@ -361,13 +411,13 @@ public function __construct(string $publicPath = "", string $skinPath = "", stri
 - Set public path for asset compilation
 
 **setSkinPath(string $path): void**
-- Set template directory path
+- Set template directory path (supports both relative and absolute paths)
 
 **setFileExtension(string $extension): void**
 - Set template file extension
 
 **setAssetPath(string $path): void**
-- Set asset storage path relative to public directory
+- Set asset storage path (supports both relative and absolute paths)
 
 **getPublicPath(): string**
 - Get current public path

@@ -110,7 +110,15 @@ class Engine
         }
 
         $this->publicPath = $publicPath;
-        $this->skinPath = $skinPath;
+        
+        if ($this->isAbsolutePath($skinPath)) {
+            $this->skinPath = $skinPath;
+        } else {
+            // Normalize path separators for relative paths
+            $normalizedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $skinPath);
+            $this->skinPath = rtrim($publicPath, '/\\') . DIRECTORY_SEPARATOR . ltrim($normalizedPath, '/\\');
+        }
+        
         $this->assetPath = $assetPath;
         $this->fileExtension = $fileExtension;
         
@@ -376,13 +384,10 @@ class Engine
     {
         $this->publicPath = $path;
         
-        // Initialize or update AssetManager
-        if (isset($this->skinPath)) {
-            $assetTargetPath = (strpos($this->assetPath, DIRECTORY_SEPARATOR) !== false || strpos($this->assetPath, '/') !== false) 
-                ? $this->assetPath 
-                : $this->publicPath . DIRECTORY_SEPARATOR . $this->assetPath;
-            
-            $webRootPath = (strpos($this->assetPath, DIRECTORY_SEPARATOR) !== false || strpos($this->assetPath, '/') !== false) 
+        // Initialize or update AssetManager if asset path is already set
+        if (isset($this->skinPath) && isset($this->assetPath)) {
+            $assetTargetPath = $this->resolveAssetPath($this->assetPath);
+            $webRootPath = $this->isAbsolutePath($this->assetPath) 
                 ? basename($this->assetPath)
                 : $this->assetPath;
                 
@@ -391,9 +396,11 @@ class Engine
     }
 
     /**
-     * Set asset path for asset storage (can be relative to public path or absolute path)
+     * Set asset path for asset storage (supports both relative and absolute paths)
      *
-     * @param string $path Asset path (e.g., 'assets', '/var/www/static', '/full/path/to/assets')
+     * @param string $path Asset path 
+     *                     - Relative: 'assets', 'static/files' (relative to public path)
+     *                     - Absolute: '/var/www/assets', 'C:\www\assets'
      */
     public function setAssetPath(string $path): void
     {
@@ -401,11 +408,8 @@ class Engine
         
         // Update AssetManager if it exists
         if (isset($this->skinPath) && isset($this->publicPath)) {
-            $assetTargetPath = (strpos($this->assetPath, DIRECTORY_SEPARATOR) !== false || strpos($this->assetPath, '/') !== false) 
-                ? $this->assetPath 
-                : $this->publicPath . DIRECTORY_SEPARATOR . $this->assetPath;
-            
-            $webRootPath = (strpos($this->assetPath, DIRECTORY_SEPARATOR) !== false || strpos($this->assetPath, '/') !== false) 
+            $assetTargetPath = $this->resolveAssetPath($this->assetPath);
+            $webRootPath = $this->isAbsolutePath($this->assetPath) 
                 ? basename($this->assetPath)
                 : $this->assetPath;
                 
@@ -414,14 +418,76 @@ class Engine
     }
 
     /**
-     * Set skin/template path
+     * Check if a path is absolute
+     *
+     * @param string $path Path to check
+     * @return bool True if absolute path, false if relative
+     */
+    private function isAbsolutePath(string $path): bool
+    {
+        // Unix/Linux absolute path (starts with /)
+        if (str_starts_with($path, '/')) {
+            return true;
+        }
+        
+        // Windows absolute path (starts with drive letter like C:\)
+        if (preg_match('/^[a-zA-Z]:[\\\\\/]/', $path)) {
+            return true;
+        }
+        
+        // UNC path (starts with \\)
+        if (str_starts_with($path, '\\\\')) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Resolve asset path (relative to public path or absolute)
+     *
+     * @param string $assetPath Asset path to resolve
+     * @return string Resolved absolute path
+     */
+    private function resolveAssetPath(string $assetPath): string
+    {
+        if ($this->isAbsolutePath($assetPath)) {
+            return $assetPath;
+        }
+        
+        // Relative path - combine with public path
+        return rtrim($this->publicPath, '/\\') . DIRECTORY_SEPARATOR . ltrim($assetPath, '/\\');
+    }
+
+    /**
+     * Set skin/template path (supports both relative and absolute paths)
      *
      * @param string $path Template path
+     *                     - Relative: 'views', 'templates/pages' (relative to public path)
+     *                     - Absolute: '/var/www/templates', 'C:\www\templates'
      */
     public function setSkinPath(string $path): void
     {
-        $this->skinPath = $path;
+        if ($this->isAbsolutePath($path)) {
+            $this->skinPath = $path;
+        } else {
+            // Normalize path separators for relative paths
+            $normalizedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+            $this->skinPath = rtrim($this->publicPath, '/\\') . DIRECTORY_SEPARATOR . ltrim($normalizedPath, '/\\');
+        }
+            
+        // Update AssetManager if it exists
+        if (isset($this->assetManager) && isset($this->assetPath)) {
+            $assetTargetPath = $this->resolveAssetPath($this->assetPath);
+            $webRootPath = $this->isAbsolutePath($this->assetPath) 
+                ? basename($this->assetPath)
+                : $this->assetPath;
+                
+            $this->assetManager = new AssetManager($this->skinPath, $assetTargetPath, $webRootPath);
+        }
     }
+
+
 
     /**
      * Set template file extension

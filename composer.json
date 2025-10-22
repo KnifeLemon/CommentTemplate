@@ -1,5 +1,6 @@
 {
     "name": "knifelemon/comment-template",
+    "version": "1.0.2",
     "description": "A PHP template engine with asset compilation, template inheritance, and variable processing",
     "type": "library",
     "license": "MIT",
