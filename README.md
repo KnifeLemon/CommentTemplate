@@ -457,6 +457,58 @@ composer phpstan
 composer test-coverage
 ```
 
+## Tracy Debugger Integration
+
+CommentTemplate includes integration with [Tracy Debugger](https://tracy.nette.org/) for development logging and debugging.
+
+![Comment Template Tracy](https://github.com/user-attachments/assets/286212be-fc26-4c8f-a44a-031bdbf72cf0)
+
+### Installation
+
+```bash
+composer require tracy/tracy
+```
+
+### Usage
+
+```php
+<?php
+use KnifeLemon\CommentTemplate\Engine;
+use Tracy\Debugger;
+
+// Enable Tracy (must be called before any output)
+Debugger::enable(Debugger::DEVELOPMENT);
+
+// Use CommentTemplate as normal - logging happens automatically
+$template = new Engine();
+$template->setPublicPath(__DIR__);
+$template->setSkinPath('templates');
+$template->setAssetPath('assets');
+
+$template->render('homepage', ['title' => 'Hello World']);
+```
+
+### Debug Panel Features
+
+CommentTemplate adds a custom panel to Tracy's debug bar with four tabs:
+
+- **Overview**: Configuration, performance metrics, and counts
+- **Assets**: CSS/JS compilation details with compression ratios
+- **Variables**: Original and transformed values with applied filters
+- **Timeline**: Chronological view of all template operations
+
+### What Gets Logged
+
+- Template rendering (start/end, duration, layouts, imports)
+- Asset compilation (CSS/JS files, sizes, compression ratios)
+- Variable processing (original/transformed values, filters)
+- Asset operations (base64 encoding, file copying)
+- Performance metrics (duration, memory usage)
+
+**Note:** Zero performance impact when Tracy is not installed or disabled.
+
+See `examples/tracy/` and `examples/flightphp/` for complete working examples.
+
 ## License
 
 MIT License. See LICENSE file for details.

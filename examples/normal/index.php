@@ -2,6 +2,10 @@
 require_once '../../vendor/autoload.php';
 
 use KnifeLemon\CommentTemplate\Engine;
+use Tracy\Debugger;
+
+// Enable Tracy Debugger
+Debugger::enable(Debugger::DEVELOPMENT);
 
 // Initialize template engine
 $template = new Engine();

@@ -18,6 +18,8 @@ class IndexController {
         $this->app->render('main', [
             ...$this->getDefaultData(),
             "name" => "John Doe",
+            "description" => "This is a   TEST   with spaces",
+            "html_content" => "<script>alert('XSS')</script>Hello World",
         ]);
     }
     

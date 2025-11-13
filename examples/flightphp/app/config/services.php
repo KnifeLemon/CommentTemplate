@@ -1,6 +1,16 @@
 <?php
 
+use Tracy\Debugger;
+use flight\debug\tracy\TracyExtensionLoader;
 use KnifeLemon\CommentTemplate\Engine;
+
+// Enable Tracy Debugger
+Debugger::enable(Debugger::DEVELOPMENT);
+
+Flight::set('flight.content_length', false);
+if(Debugger::$showBar === true) {
+	new TracyExtensionLoader(Flight::app());
+}
 
 // Template Overried
 $app->register('view', Engine::class, [], function (Engine $builder) use ($app) {

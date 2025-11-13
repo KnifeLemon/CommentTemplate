@@ -111,6 +111,20 @@ class AssetCompiler
 
         $this->saveFileIfNecessary($minifiedPath, $minifiedContent, $files, $templatePath);
 
+        // Log compilation (combined files)
+        if ($assetType === AssetType::CSS) {
+            $originalSize = array_sum(array_map('filesize', $files));
+            TemplateLogger::logCssCompilation($files, $originalSize, strlen($minifiedContent), $minifiedPath, false);
+        } else {
+            $originalSize = array_sum(array_map('filesize', $files));
+            $options = [
+                'async' => in_array($assetType, [AssetType::JS_ASYNC, AssetType::JS_TOP_ASYNC]),
+                'defer' => in_array($assetType, [AssetType::JS_DEFER, AssetType::JS_TOP_DEFER]),
+                'position' => in_array($assetType, [AssetType::JS_TOP, AssetType::JS_TOP_ASYNC, AssetType::JS_TOP_DEFER]) ? 'top' : 'bottom',
+            ];
+            TemplateLogger::logJsCompilation($files, $originalSize, strlen($minifiedContent), $minifiedPath, $options, false);
+        }
+
         $this->injectAssetHtml($assetType, $minifiedUrl, $html);
     }
 
@@ -143,6 +157,21 @@ class AssetCompiler
             // if file exists And modify time is older than source file
             if (!file_exists($singleAssetPath) || filemtime($singleAssetPath) < filemtime($file)) {
                 file_put_contents($singleAssetPath, $processedAsset);
+            }
+            
+            // Log single file (no minification)
+            $originalSize = filesize($file);
+            $processedSize = strlen($processedAsset);
+            
+            if ($assetType === AssetType::CSS_SINGLE) {
+                TemplateLogger::logCssCompilation([$file], $originalSize, $processedSize, $singleAssetPath, true);
+            } else {
+                $options = [
+                    'async' => in_array($assetType, [AssetType::JS_SINGLE_ASYNC, AssetType::JS_TOP_ASYNC]),
+                    'defer' => in_array($assetType, [AssetType::JS_SINGLE_DEFER, AssetType::JS_TOP_DEFER]),
+                    'position' => in_array($assetType, [AssetType::JS_TOP, AssetType::JS_TOP_ASYNC, AssetType::JS_TOP_DEFER]) ? 'top' : 'bottom',
+                ];
+                TemplateLogger::logJsCompilation([$file], $originalSize, $processedSize, $singleAssetPath, $options, true);
             }
             
             $this->injectAssetHtml($assetType, $singleAssetUrl, $html);

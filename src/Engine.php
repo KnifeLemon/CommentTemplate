@@ -67,6 +67,7 @@ class Engine
     private string $skinPath;
     private string $fileExtension;
     private ?AssetManager $assetManager = null;
+    private bool $hasTracy = false;
 
     protected int $layoutModifyTime = 0;
     
@@ -93,7 +94,6 @@ class Engine
                 $fileExtension = \Flight::get('flight.views.extension');
             }
         }
-
         
         // if empty set default
         if ($publicPath === "") {
@@ -121,6 +121,18 @@ class Engine
         
         $this->assetPath = $assetPath;
         $this->fileExtension = $fileExtension;
+
+        // Initialize Tracy logger if available
+        TemplateLogger::init();
+        TemplateLogger::addTracyPanel();
+        
+        // Log initialization
+        TemplateLogger::logInit([
+            'publicPath' => $this->publicPath,
+            'skinPath' => $this->skinPath,
+            'assetPath' => $this->assetPath,
+            'fileExtension' => $this->fileExtension,
+        ]);
         
         // Initialize AssetManager when paths are set
         if (isset($this->publicPath)) {
@@ -147,10 +159,16 @@ class Engine
      */
     public function render(string $template, array $data = []): void
     {
+        TemplateLogger::logTemplateStart($template, $data);
+        
         $templatePath = $this->skinPath . DIRECTORY_SEPARATOR . $template . $this->fileExtension;
         if (file_exists($templatePath)) {
             $templateHTML = $this->convertTemplate($templatePath, $data);
             $this->convertVariable($templateHTML, $data);
+            
+            TemplateLogger::logTemplateEnd($template, strlen($templateHTML));
+            TemplateLogger::logSummary();
+            
             echo $templateHTML;
         } else {
             throw new Exception("Template file not found: " . $templatePath);
@@ -195,6 +213,9 @@ class Engine
             $layout = $matches[1];
             $layoutPath = $this->skinPath . DIRECTORY_SEPARATOR . $layout . $this->fileExtension;
             if (file_exists($layoutPath)) {
+                // Log layout usage
+                TemplateLogger::logLayout($layout, $layoutPath);
+                
                 // save layout modification time
                 $this->layoutModifyTime = filemtime($layoutPath);
 
@@ -221,6 +242,9 @@ class Engine
             foreach ($matches[1] as $index => $import) {
                 $importPath = $this->skinPath . DIRECTORY_SEPARATOR . $import . $this->fileExtension;
                 if (file_exists($importPath)) {
+                    // Log import
+                    TemplateLogger::logImport($import, $importPath);
+                    
                     ob_start();
                     include $importPath;
                     $importHtml = ob_get_clean();
@@ -272,7 +296,9 @@ class Engine
         if (preg_match_all(self::PATTERN['variables'], $html, $matches)) {
             foreach ($matches[1] as $variable) {
                 $expValue = explode('|', $variable);
-                $value = $data[$expValue[0]] ?? '';
+                $originalValue = $data[$expValue[0]] ?? '';
+                $value = $originalValue;
+                $filters = [];
 
                 if (count($expValue) > 1) {
                     // for loop
@@ -288,6 +314,7 @@ class Engine
                             }
                             $command = $exp[0];
                             $commentValue = $exp[1];
+                            $filters[] = $command;
 
                             switch ($command) {
                                 case 'default':
@@ -303,10 +330,16 @@ class Engine
                             }
                         // function
                         } else if (VariableFunction::hasFunction($exp)) {
+                            $filters[] = $exp;
                             $value = VariableFunction::$exp($value);
                         }
                     }
                 }
+                
+                // Log variable usage with original and transformed values
+                // Always pass transformed value if filters were applied, even if the result is the same
+                $transformedValue = !empty($filters) ? $value : null;
+                TemplateLogger::logVariable($expValue[0], $originalValue, $filters, $transformedValue);
                 
                 $html = str_replace('{$' . $variable . '}', $value, $html);
             }
@@ -322,20 +355,30 @@ class Engine
     {
         if (preg_match_all(self::PATTERN['base64'], $html, $matches)) {
             foreach ($matches[1] as $path) {
+                $realPath = $this->skinPath . DIRECTORY_SEPARATOR . $path;
+                $fileSize = file_exists($realPath) ? filesize($realPath) : 0;
+                
                 if ($this->assetManager) {
                     $base64 = $this->assetManager->processBase64($path);
                     if ($base64) {
+                        // Log base64 encoding
+                        if ($fileSize > 0) {
+                            TemplateLogger::logBase64($path, $fileSize);
+                        }
                         $html = str_replace("<!--@base64($path)-->", $base64, $html);
                     }
                 } else {
                     // Fallback to original method
-                    $realPath = $this->skinPath . DIRECTORY_SEPARATOR . $path;
                     if (file_exists($realPath)) {
                         $data = file_get_contents($realPath);
                         $finfo = finfo_open(FILEINFO_MIME_TYPE);
                         $mimeType = finfo_file($finfo, $realPath);
                         finfo_close($finfo);
                         $base64 = 'data:' . $mimeType . ';base64,' . base64_encode($data);
+                        
+                        // Log base64 encoding
+                        TemplateLogger::logBase64($path, $fileSize);
+                        
                         $html = str_replace("<!--@base64($path)-->", $base64, $html);
                     }
                 }
@@ -354,6 +397,12 @@ class Engine
         if (preg_match_all(self::PATTERN['assetDir'], $html, $matches)) {
             foreach ($matches[1] as $index => $path) {
                 if ($this->assetManager) {
+                    $sourcePath = $this->skinPath . DIRECTORY_SEPARATOR . $path;
+                    $destination = $this->assetManager->copyAsset($path);
+                    
+                    // Log asset directory copy
+                    TemplateLogger::logAssetCopy($sourcePath, $destination, true);
+                    
                     $this->assetManager->copyAsset($path);
                 }
                 // Remove the directive from HTML (assetDir is for copying only, no output)
@@ -365,7 +414,12 @@ class Engine
         if (preg_match_all(self::PATTERN['asset'], $html, $matches)) {
             foreach ($matches[1] as $index => $path) {
                 if ($this->assetManager) {
+                    $sourcePath = $this->skinPath . DIRECTORY_SEPARATOR . $path;
                     $publicUrl = $this->assetManager->copyAsset($path);
+                    
+                    // Log asset copy
+                    TemplateLogger::logAssetCopy($sourcePath, $publicUrl, false);
+                    
                     $html = str_replace($matches[0][$index], $publicUrl, $html);
                 } else {
                     // Fallback: just return the path as-is
