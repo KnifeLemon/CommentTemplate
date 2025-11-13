@@ -461,7 +461,7 @@ composer test-coverage
 
 CommentTemplate includes integration with [Tracy Debugger](https://tracy.nette.org/) for development logging and debugging.
 
-![Comment Template Tracy](https://github.com/user-attachments/assets/286212be-fc26-4c8f-a44a-031bdbf72cf0)
+![Comment Template Tracy](https://raw.githubusercontent.com/KnifeLemon/CommentTemplate/refs/heads/master/tracy.jpeg)
 
 ### Installation
 
