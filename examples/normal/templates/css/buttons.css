@@ -1,0 +1,16 @@
+/* Button styles */
+.btn-primary {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.btn-primary:hover {
+    background-color: #764ba2;
+    border-color: #764ba2;
+}
+
+.btn-custom {
+    border-radius: 20px;
+    padding: 10px 25px;
+    font-weight: bold;
+}

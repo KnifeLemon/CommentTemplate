@@ -347,6 +347,7 @@ class AssetCompiler
 
     /**
      * Extract asset files from HTML and return file paths
+     * Supports wildcards like *.css or folder/*.js
      */
     private function getAssetFiles(string &$html, string $pattern): array
     {
@@ -357,8 +358,27 @@ class AssetCompiler
                 $html = str_replace($matches[0][$index], '', $html);
 
                 $realPath = $this->skinPath . DIRECTORY_SEPARATOR . $path;
-                if (file_exists($realPath)) {
-                    $files[] = $realPath;
+                
+                // Check if path contains wildcard
+                if (strpos($path, '*') !== false) {
+                    // Convert path to glob pattern
+                    $globPattern = $this->skinPath . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+                    $matchedFiles = glob($globPattern);
+                    
+                    if ($matchedFiles) {
+                        // Sort files alphabetically for consistent ordering
+                        sort($matchedFiles);
+                        foreach ($matchedFiles as $matchedFile) {
+                            if (is_file($matchedFile)) {
+                                $files[] = $matchedFile;
+                            }
+                        }
+                    }
+                } else {
+                    // Single file path
+                    if (file_exists($realPath)) {
+                        $files[] = $realPath;
+                    }
                 }
             }
         }

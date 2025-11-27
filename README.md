@@ -135,12 +135,14 @@ Use layouts to create a common structure:
 #### CSS Files
 ```html
 <!--@css(/css/styles.css)-->          <!-- Minified and cached -->
+<!--@css(/css/*.css)-->               <!-- Load all CSS files in folder (sorted alphabetically) -->
 <!--@cssSingle(/css/critical.css)-->  <!-- Single file, not minified -->
 ```
 
 #### JavaScript Files
 ```html
 <!--@js(/js/script.js)-->             <!-- Minified, loaded at bottom -->
+<!--@js(/js/*.js)-->                  <!-- Load all JS files in folder (sorted alphabetically) -->
 <!--@jsAsync(/js/analytics.js)-->     <!-- Minified, loaded at bottom with async -->
 <!--@jsDefer(/js/utils.js)-->         <!-- Minified, loaded at bottom with defer -->
 <!--@jsTop(/js/critical.js)-->        <!-- Minified, loaded in head -->
@@ -150,6 +152,11 @@ Use layouts to create a common structure:
 <!--@jsSingleAsync(/js/ads.js)-->     <!-- Single file, not minified, async -->
 <!--@jsSingleDefer(/js/social.js)-->  <!-- Single file, not minified, defer -->
 ```
+
+**Wildcard Support:**
+- Use `*` to match multiple files: `<!--@css(/css/*.css)-->`
+- Files are processed in alphabetical order for consistent output
+- Works with all asset directives: `@css`, `@js`, `@jsAsync`, `@jsDefer`, etc.
 
 #### Base64 Encoding
 ```html

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{$title}</title>
     <!--@css(/css/bootstrap.min.css)-->
-    <!--@css(/css/custom.css)-->
+    <!--@css(/css/*.css)-->
 </head>
 <body>
     <!--@import(components/header)-->
@@ -17,7 +17,7 @@
     <!--@import(components/footer)-->
     
     <!--@jsDefer(/js/bootstrap.min.js)-->
-    <!--@js(/js/app.js)-->
+    <!--@js(/js/*.js)-->
     <!--@jsSingleAsync(/js/analytics.js)-->
 </body>
 </html>
