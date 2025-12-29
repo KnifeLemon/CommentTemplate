@@ -36,7 +36,7 @@ class AssetManager
         
         if ($webRootNormalized !== '' && (
             $relativeNormalized === $webRootNormalized ||
-            str_starts_with($relativeNormalized, $webRootNormalized . '/'))
+            strpos($relativeNormalized, $webRootNormalized . '/') === 0)
         ) {
             $publicRelativeNormalized = ltrim(substr($relativeNormalized, strlen($webRootNormalized)), '/');
         }
