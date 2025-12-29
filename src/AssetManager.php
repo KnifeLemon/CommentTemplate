@@ -27,8 +27,23 @@ class AssetManager
      */
     public function copyAsset(string $relativePath): string
     {
-        $relativePath = ltrim($relativePath, '/\\');
-        $sourcePath = $this->sourceDir . DIRECTORY_SEPARATOR . $relativePath;
+        $relativeOriginal = ltrim($relativePath, '/\\');
+
+        // Avoid duplicating the asset root when callers pass paths that already include it
+        $webRootNormalized = trim(str_replace(['\\', '/'], '/', $this->webRootPath), '/');
+        $relativeNormalized = str_replace(['\\', '/'], '/', $relativeOriginal);
+        $publicRelativeNormalized = $relativeNormalized;
+        
+        if ($webRootNormalized !== '' && (
+            $relativeNormalized === $webRootNormalized ||
+            str_starts_with($relativeNormalized, $webRootNormalized . '/'))
+        ) {
+            $publicRelativeNormalized = ltrim(substr($relativeNormalized, strlen($webRootNormalized)), '/');
+        }
+
+        // Source uses the original relative path; public path drops the duplicated root
+        $sourcePath = $this->sourceDir . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeOriginal);
+        $relativePath = str_replace('/', DIRECTORY_SEPARATOR, $publicRelativeNormalized);
         $publicPath = $this->publicDir . DIRECTORY_SEPARATOR . $relativePath;
         
         // Check if it's a directory

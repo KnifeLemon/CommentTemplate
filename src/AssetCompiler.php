@@ -87,19 +87,8 @@ class AssetCompiler
             $fileContent = file_get_contents($file);
             $processedContent = $this->processAssetDirectives($fileContent);
             
-            // Create a temporary file with processed content
-            $tempFile = tempnam(sys_get_temp_dir(), 'ct_') . '.' . $assetExtension;
-            file_put_contents($tempFile, $processedContent);
-            
-            // Add the temporary file to minifier
-            $minifier->add($tempFile);
-            
-            // Register for cleanup
-            register_shutdown_function(function() use ($tempFile) {
-                if (file_exists($tempFile)) {
-                    unlink($tempFile);
-                }
-            });
+            // Add processed content directly as string to avoid path rewriting by minifier
+            $minifier->add($processedContent);
         }
 
         // Minify 처리와 파일 저장 처리부
@@ -186,49 +175,50 @@ class AssetCompiler
      */
     private function processAssetDirectives(string $content): string
     {
-        // Process @asset directive
-        if (preg_match_all('/<!--@asset\((.*?)\)-->/', $content, $matches, PREG_SET_ORDER)) {
-            // Use the same logic as CommentTemplate for asset path calculation
-            $assetTargetPath = (strpos($this->assetPath, DIRECTORY_SEPARATOR) !== false || strpos($this->assetPath, '/') !== false) 
-                ? $this->assetPath 
-                : $this->publicPath . DIRECTORY_SEPARATOR . $this->assetPath;
-            
-            // Calculate webRootPath for URL generation
-            if (strpos($this->assetPath, DIRECTORY_SEPARATOR) !== false || strpos($this->assetPath, '/') !== false) {
-                // Absolute path - calculate relative path from publicPath
-                $webRootPath = str_replace($this->publicPath, '', $this->assetPath);
-                $webRootPath = trim($webRootPath, '/\\');
-            } else {
-                // Relative path
-                $webRootPath = $this->assetPath;
-            }
-            
-            $assetManager = new AssetManager($this->skinPath, $assetTargetPath, $webRootPath);
-            
-            foreach ($matches as $match) {
-                $fullMatch = $match[0]; // <!--@asset(path)-->
-                $path = $match[1]; // path
-                $publicUrl = $assetManager->copyAsset($path);
-                $content = str_replace($fullMatch, $publicUrl, $content);
-            }
+        // Use the same logic as CommentTemplate for asset path calculation
+        $assetTargetPath = (strpos($this->assetPath, DIRECTORY_SEPARATOR) !== false || strpos($this->assetPath, '/') !== false) 
+            ? $this->assetPath 
+            : $this->publicPath . DIRECTORY_SEPARATOR . $this->assetPath;
+        
+        // Calculate webRootPath for URL generation
+        if (strpos($this->assetPath, DIRECTORY_SEPARATOR) !== false || strpos($this->assetPath, '/') !== false) {
+            // Absolute path - calculate relative path from publicPath
+            $webRootPath = str_replace($this->publicPath, '', $this->assetPath);
+            $webRootPath = trim($webRootPath, '/\\');
+        } else {
+            // Relative path
+            $webRootPath = $this->assetPath;
         }
+        
+        $assetManager = new AssetManager($this->skinPath, $assetTargetPath, $webRootPath);
+        
+        // Process @asset directive using preg_replace_callback for safe replacement
+        $content = preg_replace_callback(
+            '/<!--@asset\((.*?)\)-->/',
+            function($matches) use ($assetManager) {
+                $path = trim($matches[1]); // Trim whitespace from path
+                return $assetManager->copyAsset($path);
+            },
+            $content
+        );
 
-        // Process @base64 directive  
-        if (preg_match_all('/<!--@base64\((.*?)\)-->/', $content, $matches, PREG_SET_ORDER)) {
-            foreach ($matches as $match) {
-                $fullMatch = $match[0]; // <!--@base64(path)-->
-                $path = $match[1]; // path
+        // Process @base64 directive using preg_replace_callback for safe replacement
+        $content = preg_replace_callback(
+            '/<!--@base64\((.*?)\)-->/',
+            function($matches) {
+                $path = trim($matches[1]); // path (trim whitespace)
                 $realPath = $this->skinPath . DIRECTORY_SEPARATOR . $path;
                 if (file_exists($realPath)) {
                     $data = file_get_contents($realPath);
                     $finfo = finfo_open(FILEINFO_MIME_TYPE);
                     $mimeType = finfo_file($finfo, $realPath);
                     finfo_close($finfo);
-                    $base64 = 'data:' . $mimeType . ';base64,' . base64_encode($data);
-                    $content = str_replace($fullMatch, $base64, $content);
+                    return 'data:' . $mimeType . ';base64,' . base64_encode($data);
                 }
-            }
-        }
+                return $matches[0]; // Return original if file not found
+            },
+            $content
+        );
 
         return $content;
     }
