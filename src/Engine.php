@@ -24,6 +24,7 @@ use Exception;
  * - <!--@base64(file)--> : Encode file as base64 data URI
  * - <!--@asset(file)--> : Copy asset file to public directory
  * - <!--@assetDir(directory)--> : Copy entire directory to public directory
+ * - <!--@echo(PHP_code)--> : Execute PHP code and output result
  * - <!--@contents--> : Placeholder for content in layouts
  * - {$variable} : Template variables with filters
  */
@@ -51,6 +52,7 @@ class Engine
         'base64' => '/<!--@base64\((.*?)\)-->/',
         'asset' => '/<!--@asset\((.*?)\)-->/',
         'assetDir' => '/<!--@assetDir\((.*?)\)-->/',
+        'echo' => '/<!--@echo\((.*?)\)-->/',
         'variables' => '/\{\$(.*?)\}/',
     ];
 
@@ -259,6 +261,9 @@ class Engine
         // 주석 제거
         $html = preg_replace(self::PATTERN['comment'], '', $html);
 
+        // @echo 처리
+        $this->processEcho($html, $data);
+
         // Asset 파일을 컴파일하고 HTML에 추가합니다.
         $assetCompiler = new AssetCompiler($this->publicPath, $this->skinPath, $this->layoutModifyTime, $this->assetPath);
         
@@ -283,6 +288,97 @@ class Engine
         $html = trim($html);
 
         return $html;
+    }
+
+    /**
+     * Process @echo directives by executing PHP code
+     *
+     * @param string $html HTML content to process
+     * @param array $data Template data for variable scope
+     */
+    private function processEcho(string &$html, array $data): void
+    {
+        // Manual parsing to handle nested parentheses and string literals
+        $pos = 0;
+        while (($start = strpos($html, '<!--@echo(', $pos)) !== false) {
+            $start += 10; // Length of '<!--@echo('
+            $depth = 1;
+            $i = $start;
+            $end = null;
+            $inString = false;
+            $stringChar = null;
+            $escaped = false;
+            
+            // Find matching closing parenthesis, respecting string literals
+            while ($i < strlen($html) && $depth > 0) {
+                $char = $html[$i];
+                
+                // Handle escape sequences
+                if ($escaped) {
+                    $escaped = false;
+                    $i++;
+                    continue;
+                }
+                
+                if ($char === '\\') {
+                    $escaped = true;
+                    $i++;
+                    continue;
+                }
+                
+                // Track string boundaries
+                if (($char === '"' || $char === "'") && !$inString) {
+                    $inString = true;
+                    $stringChar = $char;
+                } elseif ($inString && $char === $stringChar) {
+                    $inString = false;
+                    $stringChar = null;
+                }
+                
+                // Only count parentheses outside of strings
+                if (!$inString) {
+                    if ($char === '(') {
+                        $depth++;
+                    } elseif ($char === ')') {
+                        $depth--;
+                        if ($depth === 0) {
+                            $end = $i;
+                            break;
+                        }
+                    }
+                }
+                
+                $i++;
+            }
+            
+            if ($end !== null && substr($html, $end + 1, 3) === '-->') {
+                $code = substr($html, $start, $end - $start);
+                $fullMatch = '<!--@echo(' . $code . ')-->';
+                
+                // Extract data to make variables available in eval scope
+                extract($data);
+                
+                try {
+                    // Execute PHP code and capture output
+                    ob_start();
+                    $result = eval('return ' . $code . ';');
+                    $output = ob_get_clean();
+                    
+                    // Use eval result or output buffer content
+                    $value = $output !== '' ? $output : (string)$result;
+                    
+                    $html = substr_replace($html, $value, $start - 10, strlen($fullMatch));
+                    $pos = $start - 10 + strlen($value);
+                } catch (\Throwable $e) {
+                    // Replace with empty string on error
+                    $html = substr_replace($html, '', $start - 10, strlen($fullMatch));
+                    $pos = $start - 10;
+                }
+            } else {
+                // Malformed directive, skip
+                $pos = $start;
+            }
+        }
     }
 
     /**

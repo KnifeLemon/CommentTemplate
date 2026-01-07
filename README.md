@@ -210,6 +210,56 @@ const imageData = '<!--@base64(images/icon.png)-->';
 - URLs are generated with correct asset paths
 - Base64 encoding works in CSS/JS files too
 
+### PHP Code Execution
+
+Execute PHP code and output the result using `<!--@echo()-->`:
+
+```html
+<!-- Execute PHP functions and constants -->
+<div>Current time: <!--@echo(date('Y-m-d H:i:s'))--></div>
+<div>PHP Version: <!--@echo(PHP_VERSION)--></div>
+<div>App Version: <!--@echo(APP_VERSION)--></div>
+```
+
+**In JavaScript files:**
+```javascript
+// Generate dynamic URLs with Flight framework
+location.href = '<!--@echo(Flight::getUrl('login'))-->';
+const apiUrl = '<!--@echo(Flight::getUrl('api'))-->';
+const dashboardUrl = '<!--@echo(Flight::getUrl('dashboard'))-->';
+
+// Access constants and configuration
+const DEBUG_MODE = <!--@echo(DEBUG ? 'true' : 'false')-->;
+const MAX_UPLOAD = <!--@echo(MAX_FILE_SIZE)-->;
+```
+
+**In CSS files:**
+```css
+/* Dynamic theme values */
+.theme {
+    --primary-color: <!--@echo($theme['primary'] ?? '#007bff')-->;
+    --font-url: url('<!--@echo(CDN_URL . '/fonts/custom.woff2')-->');
+}
+
+.logo {
+    background: url('<!--@echo(Flight::getUrl('static') . '/logo.png')-->');
+}
+```
+
+**Features:**
+- Executes any PHP expression (functions, constants, class methods)
+- Supports nested parentheses and string literals
+- Handles complex expressions like `Flight::getUrl('route')`
+- Works in HTML templates, CSS files, and JavaScript files
+- Access template variables when used in template context
+- Errors are silently replaced with empty string
+
+**Important Notes:**
+- Template variables (`$data`) are available in HTML templates
+- In CSS/JS files, only global functions, constants, and static methods are accessible
+- The code is executed during template compilation
+- Use carefully as it executes arbitrary PHP code
+
 ### Path Configuration
 
 CommentTemplate provides intelligent path handling for both relative and absolute paths:
